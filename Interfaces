@@ -1,0 +1,97 @@
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Interface
+{
+    public interface IAdminInterface
+    {
+        RetObj AdminLogin(string username,string password);
+    }
+}
+
+
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Interface
+{
+    public interface IEmployeeInterface
+    {
+        Task<RetObj> EmployeeLogin(EmployeeModel employeemodel);
+        Task<List<EmployeeModel>> GetAllEmployee();
+        Task<EmployeeModel> GetEmployeeById(int employeeid);
+        Task<RetObj> DelteEmployeeById(int employeeid);
+        RetObj MobileLogin(EmployeeModel employee,string mobileno);
+    }
+}
+
+
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Interface
+{
+    public interface IEmployerInterface
+    {
+        Task <RetObj> EmployerLogin(EmployerModel employermodel);
+        RetObj MobileLogin(EmployerModel employer, string mobileno);
+        Task<List<EmployerModel>> GetAllEmployer();
+        Task<EmployerModel> GetEmployerById(int employerid);
+        Task<RetObj> DelteEmployerById(int employerid);
+    }
+}
+
+
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Interface
+{
+    public interface IJobApplyInterface
+    {
+        RetObj AddOrUpdateJobApply(JobApplyModel jobApply);
+        Task<List<JobApplyModel>> GetAllJobAppliers();
+        Task<JobApplyModel> GetByIdJobAppliers(int jobapplyid);
+        RetObj DeleteByJobAppliersId(int jobapplyid);
+        RetObj EmployeeAndJobUseId(int jobApplyId, int employeeId, int jobId);
+       
+    }
+}
+
+
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Interface
+{
+    public interface IJobInterface 
+    {
+        RetObj AddJob(JobModel job);
+        Task<List<JobModel>> GetAllJobs();
+        Task<JobModel> GetByIdJobs(int jobid);
+        RetObj DeleteByIdJobs(int jobid);
+        Task<List<JobModel>> GetByEmployerID(int employerid);
+    }
+}
+
+
