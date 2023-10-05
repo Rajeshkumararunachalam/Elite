@@ -1,0 +1,218 @@
+using Elite_HR.Database;
+using Elite_HR.Enum;
+using Elite_HR.Helper;
+using Elite_HR.Interface;
+using Elite_HR.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Repository
+{
+    public class EmployeeRepository : IEmployeeInterface
+    {
+        private readonly EliteHRDbContext _dbContext;
+        public EmployeeRepository(EliteHRDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        public async Task<RetObj> EmployeeLogin(EmployeeModel employeemodel)
+        {
+            try
+            {
+                if (employeemodel != null)
+                {
+                    var existEmployee =await _dbContext.elite_employee.SingleOrDefaultAsync(x => x.Employee_Id == employeemodel.Employee_Id);
+                    if (existEmployee != null)
+                    {
+                        existEmployee.FullName = employeemodel.FullName;
+                        existEmployee.Email = employeemodel.Email;
+                        existEmployee.MobileNo = employeemodel.MobileNo;
+                        existEmployee.Qualification = employeemodel.Qualification;
+                        existEmployee.Age = employeemodel.Age;
+                        existEmployee.Gender = employeemodel.Gender;
+
+                        _dbContext.SaveChanges();
+                        var retObj = new RetObj
+                        {
+                            Success = true,
+                            ErrorNote = $"Admin id has been {employeemodel.Employee_Id}  updated successfully",
+                            Employee = existEmployee
+                        };
+                        return retObj;
+                    }
+                    else
+                    {
+                        var newEmployee = new EmployeeModel
+                        {
+                            Employee_Id = employeemodel.Employee_Id,
+                            FullName = employeemodel.FullName,
+                            Email = employeemodel.Email,
+                            MobileNo = employeemodel.MobileNo,
+                            Qualification = employeemodel.Qualification,
+                            Age = employeemodel.Age,
+                            Gender = employeemodel.Gender,
+                        };
+
+                        _dbContext.elite_employee.Add(newEmployee);
+                        _dbContext.SaveChanges();
+
+                        var retObj = new RetObj
+                        {
+                            Success = true,
+                            ErrorNote = $"AdminId {newEmployee.Employee_Id} has been created successfully",
+                            Employee = newEmployee
+                        };
+                        return retObj;
+                    }
+                }
+                else
+                {
+                    return new RetObj { Success = false, ErrorNote = "InValid Admin" };
+                }
+            }
+
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+        public RetObj MobileLogin(EmployeeModel employee, string mobileno)
+        {
+            RetObj retObj = new RetObj();
+            if (string.IsNullOrWhiteSpace(mobileno))
+            {
+                retObj.Success = false;
+                retObj.ErrorNote = "Mobile number is required.";
+                return retObj;
+            }
+            var mobile = _dbContext.elite_employee.SingleOrDefault(x => x.MobileNo == mobileno);
+            if (mobile !=null)
+            {
+                var otp = Helper.Helper.GenerateOTP();
+                retObj.Status = SendOTP(mobileno, otp);
+                retObj.OTP = otp;
+                retObj.Employee = mobile;
+                retObj.Success = true;
+                retObj.ErrorNote = "OTP sent to the registered mobile number...";
+            }
+            else
+            {
+                var otp = Helper.Helper.GenerateOTP();
+                retObj.Status = SendOTP(mobileno, otp);
+                retObj.OTP = otp;
+             
+                var newEmployee = new EmployeeModel
+                {
+                    Employee_Id = 0,
+                    FullName = "",
+                    Email = "",
+                    MobileNo ="",
+                    Qualification = 0,
+                    Age = 0,
+                    Gender = 0
+                };
+                    _dbContext.elite_employee.Add(newEmployee);
+                _dbContext.SaveChanges();
+
+                retObj.Success = true;
+                retObj.ErrorNote = "Employee details are updated successfully";
+            }
+
+            return retObj;
+        }
+
+
+        public async Task<List<EmployeeModel>> GetAllEmployee()
+        {
+            List<EmployeeModel> employeeModel = await (from c in _dbContext.elite_employee
+                                                       select new EmployeeModel
+                                                       {
+                                                           Employee_Id = c.Employee_Id,
+                                                           FullName = c.FullName,
+                                                           Email=c.Email,
+                                                           MobileNo = c.MobileNo,
+                                                           Qualification = c.Qualification,
+                                                           Age = c.Age,
+                                                           Gender = c.Gender
+                                                       }).ToListAsync();
+            return employeeModel;
+        }
+        public async Task<EmployeeModel> GetEmployeeById(int employeeid)
+        {
+            EmployeeModel employeemodel = await (from c in _dbContext.elite_employee
+                                                 where c.Employee_Id == employeeid
+                                                 select new EmployeeModel
+                                                 {
+                                                     Employee_Id = c.Employee_Id,
+                                                     FullName = c.FullName,
+                                                     Email=c.Email,
+                                                     MobileNo = c.MobileNo,
+                                                     Qualification = c.Qualification,
+                                                     Age = c.Age,
+                                                     Gender = c.Gender
+
+                                                 }).FirstOrDefaultAsync();
+            return employeemodel;
+        }
+        public async Task<RetObj> DelteEmployeeById(int employeeid)
+        {
+            RetObj retObj = new RetObj();
+            EmployeeModel employee =await _dbContext.elite_employee.SingleOrDefaultAsync(x => x.Employee_Id == employeeid);
+            if(employee!=null)
+            {
+                _dbContext.elite_employee.Remove(employee);
+                await _dbContext.SaveChangesAsync();
+
+                retObj.Success = true;
+                retObj.ErrorNote = $"Employee id {employee.Employee_Id} has been deleted successfully";
+                retObj.Employee = employee;
+            }
+            return retObj;
+        }
+            private string SendOTP(string mobileNumber, int OTP)
+            {
+                string status = "Success..!";
+                try
+                {
+                    string recipientMessage = "Your OTP for Elite_HR app is " + OTP + "..CGENIE";
+
+                    string requestUriString = "http://smsapi.cloud3infotech.in/api/sms_api.php?username=Codegenje&api_password=cuq3tqqkzh4" + "&message=" + recipientMessage + "&destination=" + mobileNumber + "&type=2&sender=CGENIE";
+
+                    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUriString);
+                    httpWebRequest.Method = "GET";
+
+                    WebResponse response = httpWebRequest.GetResponse();
+
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        using (StreamReader streamReader = new StreamReader(responseStream))
+                        {
+                            var text = streamReader.ReadToEnd();
+                            streamReader.Close();
+                            responseStream.Close();
+                            response.Close();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+
+                return status;
+            }
+
+            private int GenerateOTP()
+            {
+                Random random = new Random();
+                int otpValue = random.Next(1000, 9999); // Generate a random 4-digit OTP
+                return otpValue;
+            }
+        
+    }
+}
