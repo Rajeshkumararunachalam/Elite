@@ -1,0 +1,131 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Model
+{
+    public class AdminModel
+    {
+        [Key]
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public string UserPassword { get; set; }
+    }
+}
+
+
+using Elite_HR.Enum;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Model
+{
+    public class EmployeeModel
+    {
+        [Key]
+        public int Employee_Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string MobileNo { get; set; }
+        public qualification Qualification { get; set; }
+        public int Age { get; set; }
+        public Gender Gender { get; set; }
+        [NotMapped]
+        [JsonIgnore]
+        public JobModel Job { get; set; }
+    }
+}
+
+
+using Elite_HR.Enum;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Model
+{
+    public class EmployerModel
+    {
+        [Key]
+        public int EmployerId { get; set; }
+        public string CompanyName { get; set; }
+        public string CompanyMobileNo { get; set; }
+        public string CompanyEmail { get; set; }
+        public string CompanyAddress { get; set; }
+        public industry Industry { get; set; }
+        public string ContactPersonName { get; set; }
+        public string ContactPersonMobileNo { get; set; }
+        [JsonIgnore]
+        public List<JobModel> Jobmodel { get; set; }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Model
+{
+    public class JobApplyModel
+    {
+        [Key]
+        public int JobApplyId { get; set; }
+        public int Employee_Id { get; set; }
+        public int JobId { get; set; }
+        [JsonIgnore]
+        public EmployeeModel Employee { get; set; }
+    }
+}
+
+
+using Elite_HR.Enum;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Model
+{
+    public class JobModel
+    {
+        [Key]
+        public int JobId { get; set; }
+        public int EmployerId { get; set; }
+        public string JobTitle { get; set; }
+        public string EmployeeType { get; set; }
+        public string Destination { get; set; }
+        public jobType JobType { get; set; }
+        public experience Experience { get; set; }
+        public qualification Qualification { get; set; }
+        public Gender Gender { get; set; }
+        public jobTags JobTags { get; set; }
+        public industry Industry { get; set; }
+        public skillRequirements SkillsRequirements { get; set; }
+        public noOFVacancy No_Of_Vacancy { get; set; }
+        public decimal MinimumSalary { get; set; }
+        public decimal MaximumSalary { get; set; }
+        public DateTime ApplicationEndDate { get; set; }
+        public string Description { get; set; }
+        public string CompanyName { get; set; }
+        public string CompanyAddress { get; set; }
+        public string CompanyMobileNo { get; set; }
+        public string CompanyEmail { get; set; }
+
+    }
+}
