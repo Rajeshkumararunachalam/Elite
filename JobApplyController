@@ -1,0 +1,61 @@
+using Elite_HR.Helper;
+using Elite_HR.Interface;
+using Elite_HR.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class JobApplyController : ControllerBase
+    {
+        private readonly IJobApplyInterface ijobapply;
+        public JobApplyController(IJobApplyInterface mjobapply)
+        {
+            ijobapply = mjobapply;
+        }
+        [HttpPost("AddOrUpdateJobApply")]
+        public RetObj AddOrUpdateJobApply([FromBody] JobApplyModel jobApply)
+        {
+            return ijobapply.AddOrUpdateJobApply(jobApply);
+        }
+        [HttpPost("EmployeeAndJobUseId")]
+        public RetObj EmployeeAndJobUseId(int jobApplyId,int employeeId,int jobId)
+        {
+            return ijobapply.EmployeeAndJobUseId(jobApplyId, employeeId, jobId);
+        }
+
+        [HttpGet("GetAllJobAppliers")]
+        public async Task<IActionResult> GetAllJobAppliers()
+        {
+            List<JobApplyModel> jobApply = await ijobapply.GetAllJobAppliers();
+            if (jobApply != null)
+            {
+                return Ok(jobApply);
+            }
+            return NoContent();
+        }
+        [HttpGet("GetByIdJobAppliers")]
+        public async Task<IActionResult> GetByIdJobAppliers(int jobapplyid)
+        {
+            JobApplyModel jobApply = await ijobapply.GetByIdJobAppliers(jobapplyid);
+            if (jobApply != null)
+            {
+                return Ok(jobApply);
+            }
+            return NoContent();
+        }
+      
+        [HttpDelete("DeleteByJobAppliersId")]
+        public RetObj DeleteByJobAppliersId(int jobapplyid)
+        {
+            return ijobapply.DeleteByJobAppliersId(jobapplyid);
+        }
+    }
+}
+
