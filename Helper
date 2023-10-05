@@ -1,0 +1,71 @@
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Helper
+{
+    public class Helper
+    {
+        private static IConfiguration _configuration;
+
+        public static void Initialize(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public static string BindJSON(object inputOBJ)
+        {
+
+            using (var output = new StringWriter())
+            {
+                return output.ToString();
+            }
+
+        }
+        public static int GenerateOTP()
+        {
+            int OTP = 0000;
+            try
+            {
+                Random r = new Random();
+                OTP = r.Next(1000, 9999);
+            }
+            catch
+            {
+                throw;
+            }
+            return OTP;
+        }
+        public static string getOTP()
+        {
+
+            return new Random().Next(0000, 9999).ToString();
+        }
+    }
+}
+
+
+using Elite_HR.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Helper
+{
+    public class RetObj
+    {
+        public bool Success { get; set; }
+        public string ErrorNote { get; set; }
+        public int OTP { get; set; }
+        public string Status { get; set; }
+        public AdminModel adminmodel { get; set; }
+        public EmployeeModel Employee { get; set; }
+        public EmployerModel Employer{get;set;}
+        public JobModel JOB { get; set; }
+        public JobApplyModel jobAppliers { get; set; }
+    }
+}
