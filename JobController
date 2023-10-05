@@ -1,0 +1,66 @@
+using Elite_HR.Helper;
+using Elite_HR.Interface;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class JobController : ControllerBase
+    {
+        private readonly IJobInterface jobRepository;
+        public JobController(IJobInterface mjobrepository)
+        {
+            jobRepository = mjobrepository;
+        }
+        [HttpPost("AddOrUpdateJob")]
+        public RetObj AddJob([FromBody]JobModel job)
+        {
+            return jobRepository.AddJob(job);
+        }
+        [HttpGet("GetAllJobs")]
+        public async Task<IActionResult> GetAllJobs()
+        {
+            List<JobModel> job = await jobRepository.GetAllJobs();
+            if (job != null)
+            {
+                return Ok(job);
+            }
+            return NoContent();
+        }
+        [HttpGet("GetByIdJobs")]
+        public async Task<IActionResult> GetByIdJobs(int jobid)
+        {
+            JobModel job = await jobRepository.GetByIdJobs(jobid);
+            if (job != null)
+            {
+                return Ok(job);
+            }
+            return NoContent();
+        }
+        [HttpGet("GetByEmployerID")]
+        public async Task<IActionResult> GetByEmployerID(int employerid)
+        {
+            List<JobModel> employer = await jobRepository.GetByEmployerID(employerid);
+            if (employer != null)
+            {
+                return Ok(employer);
+            }
+            return NoContent();
+        }
+        [HttpDelete("DeleteByIdJobs")]
+        public RetObj DeleteByIdJobs(int jobid)
+        {
+            return jobRepository.DeleteByIdJobs(jobid);
+        }
+    }
+}
+
