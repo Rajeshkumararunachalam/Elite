@@ -1,0 +1,223 @@
+using Elite_HR.Database;
+using Elite_HR.Helper;
+using Elite_HR.Interface;
+using Elite_HR.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Repository
+{
+        public class EmployerRepository : IEmployerInterface
+        {
+            private readonly EliteHRDbContext _dbContext;
+            public EmployerRepository(EliteHRDbContext dbContext)
+            {
+                _dbContext = dbContext;
+            }
+            public async Task<RetObj> EmployerLogin(EmployerModel employermodel)
+            {
+                try
+                {
+                    if (employermodel != null)
+                    {
+                        var existEmployer = await _dbContext.elite_employer.SingleOrDefaultAsync(x => x.EmployerId == employermodel.EmployerId);
+                        if (existEmployer != null)
+                        {
+                            employermodel.CompanyName = employermodel.CompanyName;
+                            employermodel.CompanyMobileNo = employermodel.CompanyMobileNo;
+                            employermodel.CompanyEmail = employermodel.CompanyEmail;
+                            employermodel.CompanyAddress = employermodel.CompanyAddress;
+                            employermodel.Industry = employermodel.Industry;
+                            employermodel.ContactPersonName = employermodel.ContactPersonName;
+                            employermodel.ContactPersonMobileNo = employermodel.ContactPersonMobileNo;
+
+                            _dbContext.SaveChanges();
+                            var retObj = new RetObj
+                            {
+                                Success = true,
+                                ErrorNote = $"EmployerId  has been {employermodel.EmployerId}  updated successfully",
+                                Employer = existEmployer
+                            };
+                            return retObj;
+                        }
+                        else
+                        {
+                            var newEmployer = new EmployerModel
+                            {
+                                EmployerId = employermodel.EmployerId,
+                                CompanyName = employermodel.CompanyName,
+                                CompanyMobileNo = employermodel.CompanyMobileNo,
+                                CompanyEmail = employermodel.CompanyEmail,
+                                CompanyAddress = employermodel.CompanyAddress,
+                                Industry = employermodel.Industry,
+                                ContactPersonName = employermodel.ContactPersonName,
+                                ContactPersonMobileNo = employermodel.ContactPersonMobileNo
+                            };
+
+                            _dbContext.elite_employer.Add(newEmployer);
+                            _dbContext.SaveChanges();
+
+                            var retObj = new RetObj
+                            {
+                                Success = true,
+                                ErrorNote = $"EmployerId {newEmployer.EmployerId} has been created successfully",
+                                Employer = newEmployer
+                            };
+                            return retObj;
+                        }
+                    }
+                    else
+                    {
+                        return new RetObj { Success = false, ErrorNote = "InValid Employer" };
+                    }
+                }
+
+                catch (Exception e)
+                {
+                    throw e;
+                }
+            }
+            public RetObj MobileLogin(EmployerModel employer, string mobileno)
+            {
+                RetObj retObj = new RetObj();
+            if (string.IsNullOrWhiteSpace(mobileno))
+            {
+                retObj.Success = false;
+                retObj.ErrorNote = "Mobile number is required.";
+                return retObj;
+            }
+            var mobile = _dbContext.elite_employer.SingleOrDefault(x => x.ContactPersonMobileNo == mobileno);
+
+                if (mobile != null)
+                {
+                    var otp = Helper.Helper.GenerateOTP();
+                    retObj.Status = SendOTP(mobileno, otp);
+                    retObj.OTP = otp;
+                    retObj.Success = true;
+                    retObj.ErrorNote = "OTP sent to the registered mobile number...";
+                }
+                else
+                {
+                    var otp = Helper.Helper.GenerateOTP();
+                    retObj.Status = SendOTP(mobileno, otp);
+                    retObj.OTP = otp;
+
+                    var newEmployer = new EmployerModel
+                    {
+                        EmployerId = 0,
+                        CompanyName = "",
+                        CompanyMobileNo = "",
+                        CompanyEmail = "",
+                        CompanyAddress = "",
+                        Industry = 0,
+                        ContactPersonName = "",
+                        ContactPersonMobileNo =""
+                    };
+                    _dbContext.elite_employer.Add(newEmployer);
+                    _dbContext.SaveChanges();
+
+                    retObj.Success = true;
+                    retObj.ErrorNote = "Employee details are updated successfully";
+                }
+
+                return retObj;
+            }
+
+
+            public async Task<List<EmployerModel>> GetAllEmployer()
+            {
+                List<EmployerModel> employerModel = await (from c in _dbContext.elite_employer
+                                                           select new EmployerModel
+                                                           {
+                                                               EmployerId = c.EmployerId,
+                                                               CompanyName = c.CompanyName,
+                                                               CompanyMobileNo = c.CompanyMobileNo,
+                                                               CompanyEmail = c.CompanyEmail,
+                                                               CompanyAddress = c.CompanyAddress,
+                                                               Industry = c.Industry,
+                                                               ContactPersonName = c.ContactPersonName,
+                                                               ContactPersonMobileNo = c.ContactPersonMobileNo
+                                                           }).ToListAsync();
+                return employerModel;
+            }
+            public async Task<EmployerModel> GetEmployerById(int employerid)
+            {
+                EmployerModel employermodel = await (from c in _dbContext.elite_employer
+                                                     where c.EmployerId == employerid
+                                                     select new EmployerModel
+                                                     {
+                                                         EmployerId = c.EmployerId,
+                                                         CompanyName = c.CompanyName,
+                                                         CompanyMobileNo = c.CompanyMobileNo,
+                                                         CompanyEmail = c.CompanyEmail,
+                                                         CompanyAddress = c.CompanyAddress,
+                                                         Industry = c.Industry,
+                                                         ContactPersonName = c.ContactPersonName,
+                                                         ContactPersonMobileNo = c.ContactPersonMobileNo
+
+                                                     }).FirstOrDefaultAsync();
+                return employermodel;
+            }
+            public async Task<RetObj> DelteEmployerById(int employerid)
+            {
+                RetObj retObj = new RetObj();
+                EmployerModel employer = await _dbContext.elite_employer.SingleOrDefaultAsync(x => x.EmployerId == employerid);
+                if (employer != null)
+                {
+                    _dbContext.elite_employer.Remove(employer);
+                    await _dbContext.SaveChangesAsync();
+
+                    retObj.Success = true;
+                    retObj.ErrorNote = $"Employee id {employer.EmployerId} has been deleted successfully";
+                    retObj.Employer = employer;
+                }
+            return retObj;
+            }
+            private string SendOTP(string mobileNumber, int OTP)
+            {
+                string status = "Success..!";
+                try
+                {
+                    string recipientMessage = "Your OTP for Elite_HR app is " + OTP + "..CGENIE";
+
+                    string requestUriString = "http://smsapi.cloud3infotech.in/api/sms_api.php?username=Codegenje&api_password=cuq3tqqkzh4" + "&message=" + recipientMessage + "&destination=" + mobileNumber + "&type=2&sender=CGENIE";
+
+                    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(requestUriString);
+                    httpWebRequest.Method = "GET";
+
+                    WebResponse response = httpWebRequest.GetResponse();
+
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        using (StreamReader streamReader = new StreamReader(responseStream))
+                        {
+                            var text = streamReader.ReadToEnd();
+                            streamReader.Close();
+                            responseStream.Close();
+                            response.Close();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+
+                return status;
+            }
+
+            private int GenerateOTP()
+            {
+                Random random = new Random();
+                int otpValue = random.Next(1000, 9999); // Generate a random 4-digit OTP
+                return otpValue;
+            }
+
+        }
+    }
+
