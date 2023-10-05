@@ -1,0 +1,548 @@
+Admin
+using Elite_HR.Database;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Elite_HR_UnitTesting
+{
+    [TestClass]
+    public class AdminTest
+    {
+        private DbContextOptions<EliteHRDbContext> dbContextOptions;
+        [TestInitialize]
+        public void Initialize()
+        {
+            dbContextOptions = new DbContextOptionsBuilder<EliteHRDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+        }
+
+        [TestMethod]
+        public void AdminLogin_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new AdminRepository(dbContext);
+                var admin = new AdminModel { UserName = "AdminUserName", UserPassword = "AdminPassword" };
+
+                dbContext.elite_admin.Add(admin);
+                dbContext.SaveChanges();
+
+                var result = repository.AdminLogin("AdminUserName","AdminPassword");
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+    }
+}
+
+Employee
+
+using Elite_HR.Database;
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Elite_HR_UnitTesting.UnitTesting
+{
+   [TestClass]
+   public class EmployeeTest
+    {
+        private DbContextOptions<EliteHRDbContext> dbContextOptions;
+        [TestInitialize]
+        public void Initialize()
+        {
+            dbContextOptions = new DbContextOptionsBuilder<EliteHRDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+        }
+        [TestMethod]
+        public async Task EmployeeLogin_ValidCredentials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployeeRepository(dbContext);
+                var employee = new EmployeeModel
+                {
+                    Employee_Id = 0,
+                    FullName = "Rajesh",
+                    Email = "rajesh@gmail.com",
+                    MobileNo = "8098753884",
+                    Qualification = 0,
+                    Age = 20,
+                    Gender = 0
+                };
+                var result =await repository.EmployeeLogin(employee);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public void MobileLogin_ValidCredentials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployeeRepository(dbContext);
+                var employee = new EmployeeModel
+                {
+                    Employee_Id = 1,
+                    FullName = "Rajesh",
+                    Email = "rajesh@gmail.com",
+                    MobileNo = "8098753884",
+                    Qualification = 0,
+                    Age = 20,
+                    Gender = 0
+                };
+                var result = repository.MobileLogin(employee,"80987453884");
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public async Task GetAllEmployee_ValidCretendials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployeeRepository(dbContext);
+                var employee = new List<EmployeeModel>
+                {
+                    new EmployeeModel{Employee_Id=1},
+                    new EmployeeModel{Employee_Id=2}
+                };
+                dbContext.elite_employee.AddRange(employee);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetAllEmployee();
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(employee.Count, result.Count);
+            }
+        }
+        [TestMethod]
+        public async Task GetEmployeeById_ValidCredentials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository= new EmployeeRepository(dbContext);
+                var employee = new EmployeeModel { Employee_Id = 1 };
+                dbContext.elite_employee.Add(employee);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetEmployeeById(1);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.Employee_Id);
+            }
+        }
+        [TestMethod]
+        public async Task DelteEmployeeById_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployeeRepository(dbContext);
+                var employee = new EmployeeModel { Employee_Id = 1 };
+                dbContext.elite_employee.Add(employee);
+                await dbContext.SaveChangesAsync();
+
+                var result =await repository.DelteEmployeeById(1);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+    }
+}
+
+
+Employer
+
+using Elite_HR.Database;
+using Elite_HR.Helper;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Elite_HR_UnitTesting.UnitTesting
+{
+    [TestClass]
+    public class EmployerTest
+    {
+        private DbContextOptions<EliteHRDbContext> dbContextOptions;
+        [TestInitialize]
+        public void Initialize()
+        {
+            dbContextOptions = new DbContextOptionsBuilder<EliteHRDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+        }
+        [TestMethod]
+        public async Task EmployerLogin_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployerRepository(dbContext);
+                var employer = new EmployerModel
+                {
+                    EmployerId = 0,
+                    CompanyName = "Alfaj",
+                    CompanyMobileNo = "8098753884",
+                    CompanyEmail = "rajesh@gmail.com",
+                    CompanyAddress = "Perumalpuram",
+                    Industry = 0,
+                    ContactPersonName = "Rajesh",
+                    ContactPersonMobileNo="7448861598"
+                };
+                var result = await repository.EmployerLogin(employer);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public void MobileLogin_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployerRepository(dbContext);
+                var employer = new EmployerModel
+                {
+                    EmployerId = 0,
+                    CompanyName = "Alfaj",
+                    CompanyMobileNo = "8098753884",
+                    CompanyEmail = "rajesh@gmail.com",
+                    CompanyAddress = "Perumalpuram",
+                    Industry = 0,
+                    ContactPersonName = "Rajesh",
+                    ContactPersonMobileNo = "7448861598"
+                };
+                var result = repository.MobileLogin(employer, "80987453884");
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public async Task GetAllEmployer_ValidCretendials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployerRepository(dbContext);
+                var employer = new List<EmployerModel>
+                {
+                    new EmployerModel{EmployerId=1},
+                    new EmployerModel{EmployerId=2}
+                };
+                dbContext.elite_employer.AddRange(employer);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetAllEmployer();
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(employer.Count, result.Count);
+            }
+        }
+        [TestMethod]
+        public async Task GetEmployerById_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployerRepository(dbContext);
+                var employer = new EmployerModel { EmployerId = 1 };
+                dbContext.elite_employer.Add(employer);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetEmployerById(1);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.EmployerId);
+            }
+        }
+        [TestMethod]
+        public async Task DelteEmployerById_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new EmployerRepository(dbContext);
+                var employer = new EmployerModel { EmployerId = 1 };
+                dbContext.elite_employer.Add(employer);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.DelteEmployerById(1);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+    }
+}
+
+
+JobApply
+
+using Elite_HR.Database;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Elite_HR_UnitTesting.UnitTesting
+{
+    [TestClass]
+    public class AdminTest
+    {
+        private DbContextOptions<EliteHRDbContext> dbContextOptions;
+        [TestInitialize]
+        public void Initialize()
+        {
+            dbContextOptions = new DbContextOptionsBuilder<EliteHRDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+        }
+
+        [TestMethod]
+        public void AddOrUpdateJobApply_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobApplyRepository(dbContext);
+                var jobApply = new JobApplyModel
+                {
+                    JobApplyId = 0,
+                    Employee_Id = 1,
+                    JobId = 1
+                };
+                var result = repository.AddOrUpdateJobApply(jobApply);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public void EmployeeAndJobUseId_ValidCredentials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobApplyRepository(dbContext);
+                var jobApply = new JobApplyModel { JobApplyId = 1 };
+                dbContext.elite_jobappliers.Add(jobApply);
+
+                var employee = new EmployeeModel { Employee_Id = 1 };
+                dbContext.elite_employee.Add(employee);
+
+                var job = new JobModel { JobId = 1 };
+                dbContext.elite_jobs.Add(job);
+
+                dbContext.SaveChanges();
+                var result = repository.EmployeeAndJobUseId(1, 1, 1);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+        [TestMethod]
+        public async Task GetAllJobAppliers_ValidCretendials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobApplyRepository(dbContext);
+                var jobApply = new List<JobApplyModel>
+                {
+                    new JobApplyModel{JobApplyId=1},
+                    new JobApplyModel{JobApplyId=2}
+                };
+                dbContext.elite_jobappliers.AddRange(jobApply);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetAllJobAppliers();
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(jobApply.Count, result.Count);
+            }
+        }
+        [TestMethod]
+        public async Task GetByIdJobAppliers_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobApplyRepository(dbContext);
+                var jobApply = new JobApplyModel { JobApplyId = 1 };
+                dbContext.elite_jobappliers.Add(jobApply);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetByIdJobAppliers(1);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.JobApplyId);
+            }
+        }
+        [TestMethod]
+        public void DeleteByJobAppliersId_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobApplyRepository(dbContext);
+                var jobApply = new JobApplyModel { JobApplyId = 1 };
+                dbContext.elite_jobappliers.Add(jobApply);
+                 dbContext.SaveChanges();
+
+                var result = repository.DeleteByJobAppliersId(1);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+    }
+    }
+
+
+Job
+
+using Elite_HR.Database;
+using Elite_HR.Model;
+using Elite_HR.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Elite_HR_UnitTesting.UnitTesting
+{
+    [TestClass]
+    public class JobTest
+    {
+        private DbContextOptions<EliteHRDbContext> dbContextOptions;
+        [TestInitialize]
+        public void Initialize()
+        {
+            dbContextOptions = new DbContextOptionsBuilder<EliteHRDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+        }
+
+        [TestMethod]
+        public void AddJob_ValidCredentials_ReturnSuccess()
+        {
+            // Arrange
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobRepository(dbContext);
+
+                // Create a mock EmployerModel to simulate an existing employer
+                var existingEmployer = new EmployerModel
+                {
+                    EmployerId = 1,
+                    CompanyName = "ExistingCompany",
+                    CompanyAddress = "ExistingAddress",
+                    CompanyMobileNo = "1234567890",
+                    CompanyEmail = "existing@example.com"
+                };
+                dbContext.elite_employer.Add(existingEmployer);
+                dbContext.SaveChanges();
+
+                var job = new JobModel
+                {
+                    EmployerId = 1,
+                    JobId = 0,
+                    JobTitle = "Software Developer",
+                    EmployeeType = "IT",
+                    Destination = "Some Destination",
+                    JobType = 0,
+                    Experience = 0,
+                    Qualification = 0,
+                    Gender = 0,
+                    JobTags = 0,
+                    Industry = 0,
+                    SkillsRequirements = 0,
+                    No_Of_Vacancy = 0,
+                    MinimumSalary = 10000,
+                    MaximumSalary = 50000,
+                    ApplicationEndDate = DateTime.Now.AddDays(30)
+                };
+
+                // Act
+                var result = repository.AddJob(job);
+
+                // Assert
+                Assert.IsTrue(result.Success);
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAllJobs_ValidCretendials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobRepository(dbContext);
+                var job = new List<JobModel>
+                {
+                    new JobModel{JobId=1},
+                    new JobModel{JobId=2}
+                };
+                dbContext.elite_jobs.AddRange(job);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetAllJobs();
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(job.Count, result.Count);
+            }
+        }
+        [TestMethod]
+        public async Task GetByIdJobs_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobRepository(dbContext);
+                var job = new JobModel { JobId = 1 };
+                dbContext.elite_jobs.Add(job);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetByIdJobs(1);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.JobId);
+            }
+        }
+        [TestMethod]
+        public async Task GetByEmployerID_ValidCredentials_ReturnSuccess()
+        {
+            using(var dbContext=new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobRepository(dbContext);
+                var employer = new List<JobModel> 
+                {
+                    new JobModel {EmployerId = 1 } 
+                };
+                dbContext.elite_jobs.AddRange(employer);
+                await dbContext.SaveChangesAsync();
+
+                var result = await repository.GetByEmployerID(1);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.Count);
+            }
+        }
+        [TestMethod]
+        public void DeleteByIdJobs_ValidCredentials_ReturnSuccess()
+        {
+            using (var dbContext = new EliteHRDbContext(dbContextOptions))
+            {
+                var repository = new JobRepository(dbContext);
+                var job = new JobModel { JobId = 1 };
+                dbContext.elite_jobs.Add(job);
+                dbContext.SaveChanges();
+
+                var result = repository.DeleteByIdJobs(1);
+
+                Assert.IsTrue(result.Success);
+            }
+        }
+    }
+}
