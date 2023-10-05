@@ -1,0 +1,260 @@
+using Elite_HR.Database;
+using Elite_HR.Helper;
+using Elite_HR.Interface;
+using Elite_HR.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Elite_HR.Repository
+{
+    public class JobApplyRepository : IJobApplyInterface
+    {
+        private readonly EliteHRDbContext _dbContext;
+        public JobApplyRepository(EliteHRDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        public RetObj AddOrUpdateJobApply(JobApplyModel jobApply)
+        {
+            if (jobApply == null || jobApply.Employee_Id == 0 || jobApply.JobId == 0)
+            {
+                return new RetObj { Success = false, ErrorNote = "Invalid JobApply object." };
+            }
+            try
+            {
+                if (jobApply.JobApplyId > 0)
+                {
+                    var existingjob = _dbContext.elite_jobappliers.FirstOrDefault(a => a.JobApplyId == jobApply.JobApplyId);
+
+                    if (existingjob == null)
+                    {
+                        return new RetObj { Success = false, ErrorNote = "JobApply not found." };
+                    }
+
+                    existingjob.JobId = jobApply.JobId;
+                    existingjob.Employee_Id = jobApply.Employee_Id;
+
+
+                    _dbContext.SaveChanges();
+
+                    var retObj = new RetObj
+                    {
+                        jobAppliers = existingjob,
+                        Success = true,
+                        ErrorNote = $"JobApply with JobApplyId {existingjob.JobApplyId} has been updated successfully."
+                    };
+
+                    return retObj;
+                }
+                else
+                {
+                    var newApply = new JobApplyModel
+                    {
+                        JobApplyId = jobApply.JobApplyId,
+                        JobId = jobApply.JobId,
+                        Employee_Id = jobApply.Employee_Id,
+
+                    };
+
+                    _dbContext.elite_jobappliers.Add(newApply);
+                    _dbContext.SaveChanges();
+
+                    var retObj = new RetObj();
+
+                    if (newApply.JobApplyId > 0)
+                    {
+                        retObj.jobAppliers = newApply;
+                        retObj.Success = true;
+                        retObj.ErrorNote = $"JobApply with JobApplyId {newApply.JobApplyId} has been created successfully.";
+                    }
+                    else
+                    {
+                        retObj.Success = false;
+                        retObj.ErrorNote = "Please check your JobApply creation details.";
+                    }
+
+                    return retObj;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public RetObj EmployeeAndJobUseId(int jobApplyId, int employeeId, int jobId)
+        {
+            RetObj retObj = new RetObj();
+            try
+            {
+                if (jobApplyId != 0 && employeeId != 0 && jobId != 0)
+                {
+                    var jobApply = _dbContext.elite_jobappliers.SingleOrDefault(x => x.JobApplyId == jobApplyId);
+                    if (jobApply != null)
+                    {
+                        retObj.jobAppliers = jobApply;
+                        retObj.Success = true;
+                        retObj.ErrorNote = $"Your job apply id {jobApply.JobApplyId} has been shown successfully";
+                    }
+                    var employee = _dbContext.elite_employee.SingleOrDefault(x => x.Employee_Id == employeeId);
+                    if (employee != null)
+                    {
+                        retObj.Employee = employee;
+                        retObj.Success = true;
+                        retObj.ErrorNote = $"Your Employee id {employee.Employee_Id} has been shown successfully";
+                    }
+                    var job = _dbContext.elite_jobs.SingleOrDefault(x => x.JobId == jobId);
+                    if (job != null)
+                    {
+                        retObj.JOB = job;
+                        retObj.Success = true;
+                        retObj.ErrorNote = $"Your Job id {job.JobId} has been shown successfully";
+                    }
+                }
+                else
+                {
+                    retObj.Success = false;
+                    retObj.ErrorNote = "Please enter all the id's";
+                }
+                return retObj;
+            }
+            catch(Exception e)
+            {
+                throw e;
+            }
+        }
+        public async Task<List<JobApplyModel>> GetAllJobAppliers()
+        {
+            List<JobApplyModel> jobApplyList = await (
+                from c in _dbContext.elite_jobappliers
+                select new JobApplyModel
+                {
+                    JobApplyId = c.JobApplyId,
+                    Employee_Id = c.Employee_Id,
+                    JobId = c.JobId,
+                    Employee = (
+                        from d in _dbContext.elite_employee
+                        where d.Employee_Id == c.Employee_Id
+                        select new EmployeeModel
+                        {
+                            Employee_Id = d.Employee_Id,
+                            FullName = d.FullName,
+                            MobileNo = d.MobileNo,
+                            Qualification = d.Qualification,
+                            Age = d.Age,
+                            Gender = d.Gender,
+                            Job = (
+                                from e in _dbContext.elite_jobs
+                                where c.JobId == e.JobId
+                                select new JobModel
+                                {
+                                    JobId = e.JobId,
+                                    EmployerId = e.EmployerId,
+                                    Destination = e.Destination,
+                                    JobType = e.JobType,
+                                    Experience = e.Experience,
+                                    Qualification = e.Qualification,
+                                    Gender = e.Gender,
+                                    JobTags = e.JobTags,
+                                    Industry = e.Industry,
+                                    SkillsRequirements = e.SkillsRequirements,
+                                    No_Of_Vacancy = e.No_Of_Vacancy,
+                                    MinimumSalary = e.MinimumSalary,
+                                    MaximumSalary = e.MaximumSalary,
+                                    ApplicationEndDate = e.ApplicationEndDate,
+                                    Description = e.Description,
+                                    CompanyName = e.CompanyName,
+                                    CompanyAddress = e.CompanyAddress,
+                                    CompanyMobileNo = e.CompanyMobileNo,
+                                    CompanyEmail = e.CompanyEmail
+                                }
+                            ).FirstOrDefault()
+                }
+                    ).FirstOrDefault() 
+        }
+            ).ToListAsync();
+
+            return jobApplyList;
+        }
+
+
+        public async Task<JobApplyModel> GetByIdJobAppliers(int jobapplyid)
+        {
+            JobApplyModel jobApply = await (
+                from c in _dbContext.elite_jobappliers
+                where c.JobApplyId == jobapplyid
+                select new JobApplyModel
+                {
+                    JobApplyId = c.JobApplyId,
+                    Employee_Id = c.Employee_Id,
+                    JobId = c.JobId,
+                    Employee = (
+                        from d in _dbContext.elite_employee
+                        where d.Employee_Id == c.Employee_Id
+                        select new EmployeeModel
+                        {
+                            Employee_Id = d.Employee_Id,
+                            FullName = d.FullName,
+                            MobileNo = d.MobileNo,
+                            Qualification = d.Qualification,
+                            Age = d.Age,
+                            Gender = d.Gender,
+                            Job = (
+                        from e in _dbContext.elite_jobs
+                        where e.JobId == c.JobId
+                        select new JobModel
+                        {
+                            JobId = e.JobId,
+                            EmployerId = e.EmployerId,
+                            Destination = e.Destination,
+                            JobType = e.JobType,
+                            Experience = e.Experience,
+                            Qualification = e.Qualification,
+                            Gender = e.Gender,
+                            JobTags = e.JobTags,
+                            Industry = e.Industry,
+                            SkillsRequirements = e.SkillsRequirements,
+                            No_Of_Vacancy = e.No_Of_Vacancy,
+                            MinimumSalary = e.MinimumSalary,
+                            MaximumSalary = e.MaximumSalary,
+                            ApplicationEndDate = e.ApplicationEndDate,
+                            Description = e.Description,
+                            CompanyName = e.CompanyName,
+                            CompanyAddress = e.CompanyAddress,
+                            CompanyMobileNo = e.CompanyMobileNo,
+                            CompanyEmail = e.CompanyEmail
+                        }).FirstOrDefault()
+                        }).FirstOrDefault()
+                  }).FirstOrDefaultAsync();
+
+            return jobApply;
+        }
+
+
+         public RetObj DeleteByJobAppliersId(int jobapplyid)
+         {
+            RetObj retObj = new RetObj();
+            var jobApply = _dbContext.elite_jobappliers.SingleOrDefault(x => x.JobApplyId == jobapplyid);
+            if (jobApply != null)
+            {
+              _dbContext.elite_jobappliers.Remove(jobApply);
+              _dbContext.SaveChanges();
+
+              retObj.jobAppliers = jobApply;
+              retObj.Success = true;
+              retObj.ErrorNote = $"the entered JobApplyId {jobApply.JobApplyId} is deleted successfully";
+            }
+            else
+            {
+             retObj.Success = false;
+             retObj.ErrorNote = "please enter valid JobApplyId";
+            }
+          return retObj;
+         }
+        
+    }
+}
+/* 
+*/
